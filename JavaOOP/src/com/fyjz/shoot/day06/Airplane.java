@@ -26,7 +26,7 @@ public class Airplane extends FlyingObject {
     public Airplane(){
         super(110,125);
 
-        this.speed=2;
+        this.speed=5;
     }
 
     //移动行为
@@ -48,5 +48,10 @@ public class Airplane extends FlyingObject {
             return image;
         }
         return null;
+    }
+
+    @Override
+    public boolean flyingObjectOut() {
+        return this.y>=World.HEIGHT;//越界
     }
 }

@@ -22,7 +22,7 @@ public class BigAirplane extends FlyingObject {
     //构造方法
     public BigAirplane(){
         super(115,103);
-        this.speed=2;
+        this.speed=5;
     }
 
     //移动行为
@@ -43,5 +43,10 @@ public class BigAirplane extends FlyingObject {
             return image;
         }
         return null;
+    }
+
+    @Override
+    public boolean flyingObjectOut() {
+        return this.y>=World.HEIGHT;//越界;
     }
 }

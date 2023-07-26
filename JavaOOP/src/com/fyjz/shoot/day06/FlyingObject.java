@@ -18,7 +18,7 @@ public abstract class FlyingObject {
 
     public FlyingObject(int width,int height){
         Random random = new Random();
-        this.x = random.nextInt((World.WIDTH-this.width));
+        this.x = random.nextInt((World.WIDTH-this.width)-100);
         this.height = height;
         this.y = -height;
         this.width = width;
@@ -66,4 +66,20 @@ public abstract class FlyingObject {
 
     }
 
+    //飞行物碰撞
+    public boolean hit(FlyingObject other){
+        int x = other.x;
+        int y = other.y;
+        int x1 = this.x - other.width;
+        int y1 = this.y - other.height;
+        int x2 = this.x + this.width;
+        int y2 = this.y + this.height;
+        return (x1<=x&&x<=x2)&&(y1<=y&&y<=y2);
+    }
+    //飞行物爆照
+    public void goDie(){
+        state = DEAD;
+    }
+    //判断飞行物是否越界
+    public abstract boolean flyingObjectOut();
 }

@@ -9,6 +9,7 @@ public class Hero extends FlyingObject {
 
     private int doubleFire;//火力值
     static BufferedImage[] images;
+    private int life;//生命
     static {
         images = new BufferedImage[2];
         for (int i = 0; i < images.length; i++) {
@@ -17,8 +18,9 @@ public class Hero extends FlyingObject {
     }
     //构造方法
     public Hero(){
-        super(15,15,85,95);
-        this.doubleFire = 0;
+        super(15,15,110,157);
+        this.doubleFire = 100;
+        this.life = 3;
     }
 
     //移动行为
@@ -26,7 +28,9 @@ public class Hero extends FlyingObject {
     public void step(){
 
     }
-
+    public void setLife(int i){
+        this.life = i;
+    }
     private int heroIndex = 0;
     //根据不同状态获取不同图片
     @Override
@@ -39,9 +43,12 @@ public class Hero extends FlyingObject {
         }
         return null;
     }
+
+
+
     public void heroStep(int x,int y){
-        this.x = x-100;
-        this.y = y-140;
+        this.x = x-width/2;
+        this.y = y-height/2;
     }
     //获取英雄机子弹
     public Bullet[] getHeroBullet(){
@@ -49,18 +56,39 @@ public class Hero extends FlyingObject {
         if(doubleFire>0){
             Bullet[] bullets = new Bullet[2];
             //从英雄机的1/4处发射
-            bullets[0] = new Bullet(this.x+3*xStep-12,this.y+5);
+            bullets[0] = new Bullet(this.x+xStep-12,this.y+5);
             //从英雄机的3/4处发射
-            bullets[1] = new Bullet(this.x+6*xStep,this.y+5);
+            bullets[1] = new Bullet(this.x+3*xStep,this.y+5);
             //双倍火力
             this.doubleFire -= 2;
             return bullets;
         }else {
             //单倍火力
             Bullet[] bullets = new Bullet[1];
-            bullets[0] = new Bullet(this.x+4*xStep+6,this.y-15);
+            bullets[0] = new Bullet(this.x+2*xStep-9,this.y-15);
             return bullets;
         }
     }
 
+    //获取英雄机的生命值
+    public int getLife(){
+        return this.life;
+    }
+    //获取英雄机的火力值
+    public int getFire(){
+        return this.doubleFire;
+    }
+
+    //英雄机减生命值
+    public void subLife() {
+        this.life--;
+    }
+
+    public void clearDoubleFire() {
+        this.doubleFire = 0;
+    }
+    @Override
+    public boolean flyingObjectOut() {
+        return false;
+    }
 }

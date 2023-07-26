@@ -24,8 +24,8 @@ public class Helicopter extends FlyingObject {
     public Helicopter(){
         super(100,113);
 
-        this.xSpeed=2;
-        this.ySpeed=2;
+        this.xSpeed=4;
+        this.ySpeed=5;
     }
 
     //移动行为
@@ -50,5 +50,10 @@ public class Helicopter extends FlyingObject {
             return image;
         }
         return null;
+    }
+
+    @Override
+    public boolean flyingObjectOut() {
+        return this.y>=World.HEIGHT;//越界
     }
 }

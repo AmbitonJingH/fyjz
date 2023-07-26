@@ -16,7 +16,7 @@ public class Bullet extends FlyingObject {
     //子弹的x,y坐标随英雄机移动而移动，所以传递参数x,y
     public Bullet(int x,int y){
         super(x,y,18,45);
-        this.speed=3;
+        this.speed=4;
     }
     //移动行为
     public void step(){
@@ -31,6 +31,11 @@ public class Bullet extends FlyingObject {
             state = REMOVE;
         }
         return null;
+    }
+
+    @Override
+    public boolean flyingObjectOut() {
+        return this.y<=this.height;
     }
 
 

@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Random;
@@ -22,6 +23,24 @@ public class World extends JPanel {
     private Helicopter helicopter = new Helicopter();
     private FlyingObject[] enemies={};
     private Bullet[] bullets = {};
+    public static final int START = 0;
+    public static final int PAUSE = 1;
+    public static final int OVER = 2;
+    public static final int VICTORY = 3;
+    public static final int RUNNING = 4;
+    private int state = START;//默认状态为启动
+    public static BufferedImage start;
+    public static BufferedImage over;
+    public static BufferedImage pause;
+    public static BufferedImage victory;
+
+    static{
+        start = FlyingObject.loadImage("start2.png");
+        pause = FlyingObject.loadImage("pause.png");
+        over = FlyingObject.loadImage("gameover.png");
+        victory = FlyingObject.loadImage("victory.png");
+    }
+
     private FlyingObject getOne(){
         Random random = new Random();
         int n = random.nextInt(20);
@@ -40,9 +59,11 @@ public class World extends JPanel {
             Bullet[] heroBullet = hero.getHeroBullet();
             bullets = Arrays.copyOf(bullets,heroBullet.length+bullets.length);
             System.arraycopy(heroBullet,0,bullets,bullets.length-heroBullet.length,heroBullet.length);
-            System.out.println("子弹："+bullets.length);
+            //System.out.println("子弹："+bullets.length);
         }
     }
+
+
     //游戏入口
     public void action(){
         //鼠标监听器
@@ -54,6 +75,32 @@ public class World extends JPanel {
                 int y = e.getY();
                 hero.heroStep(x,y);
             }
+            //鼠标点击事件
+            public void mouseClicked(MouseEvent e){
+                if(state==START){
+                    //恢复游戏初始化
+                    enemies = new FlyingObject[0];
+                    bullets = new Bullet[0];
+                    hero = new Hero();
+                    sky = new Sky();
+                    state=RUNNING;
+                }
+                if(state==OVER){
+                    state=START;
+                }
+            }
+            //鼠标移出事件
+            public void mouseExited(MouseEvent e){
+                if(state==RUNNING){
+                    state=PAUSE;
+                }
+            }
+            //鼠标移入事件
+            public void mouseEntered(MouseEvent e){
+                if(state==PAUSE){
+                    state=RUNNING;
+                }
+            }
         };
         //处理鼠标滑动事件
         this.addMouseMotionListener(mouseAdapter);
@@ -63,19 +110,86 @@ public class World extends JPanel {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                bulletsAction();
-                //敌机入场
-                enemiesAction();
-                //飞行物移动
-                flyStepAction();
+                if(state == RUNNING) {
+                    bulletsAction();
+                    //敌机入场
+                    enemiesAction();
+                    //飞行物移动
+                    flyStepAction();
+                    //子弹碰撞敌机
+                    heroBulletAndEnemiesBangAction();
+                    //英雄机和敌机碰撞
+                    heroAndEnemyBangAction();
+                    //处理内存泄露
+                    checkFlyObjectOutAction();
+                    //游戏结束
+                    checkGamenOverAction();
+                }
                 //调用paint()
                 repaint();
             }
 
 
-        }, 10, 20);
+        }, 10, 10);
 
     }
+
+    private void checkFlyObjectOutAction() {
+        int liveEnemiesIndex = 0;
+        FlyingObject[] flyingObjects = new FlyingObject[enemies.length];
+        for (int i = 0; i < enemies.length; i++) {
+            FlyingObject enemy = enemies[i];
+            if(!enemy.flyingObjectOut()&&!enemy.isRemove()){
+                flyingObjects[liveEnemiesIndex++] = enemy;
+            }
+        }
+        enemies = Arrays.copyOf(flyingObjects,liveEnemiesIndex);
+        //处理子弹内存泄露问题
+        int liveBulletIndex = 0;
+        Bullet[] liveBullets = new Bullet[bullets.length];
+        for (int i = 0; i < bullets.length; i++) {
+            Bullet bullet = bullets[i];
+            if(!bullet.flyingObjectOut()&&!bullet.isRemove()){
+                liveBullets[liveBulletIndex++] = bullet;
+            }
+        }
+        bullets = Arrays.copyOf(liveBullets,liveBulletIndex);
+    }
+
+    private void checkGamenOverAction(){
+        if(hero.getLife()<=0){
+            state=OVER;
+
+        }
+    }
+        private void heroAndEnemyBangAction() {
+        for (int i = 0; i < enemies.length; i++) {
+            FlyingObject enemy = enemies[i];
+            if(hero.isLife()&&enemy.isLife()&&hero.hit(enemy)){
+                enemy.goDie();
+                //英雄机减少生命值
+                hero.subLife();
+                //清空双倍子弹数量
+                hero.clearDoubleFire();
+                if(hero.getLife()==0)
+                    hero.goDie();
+            }
+        }
+    }
+
+    private void heroBulletAndEnemiesBangAction() {
+        for (int i = 0; i < bullets.length; i++) {
+            Bullet bullet = bullets[i];
+            for (int j = 0; j < enemies.length; j++) {
+                FlyingObject enemy = enemies[j];
+                if(bullet.isLife()&&enemy.isLife()&&bullet.hit(enemy)){
+                    bullet.goDie();
+                    enemy.goDie();
+                }
+            }
+        }
+    }
+
 
     int enemiesIndex = 1;
     private void enemiesAction() {
@@ -85,7 +199,7 @@ public class World extends JPanel {
             enemies = Arrays.copyOf(enemies,enemies.length+1);
             enemies[enemies.length-1] = one;
         }
-       // System.out.println("长度"+enemies.length);
+        System.out.println("长度"+enemies.length);
     }
 
     private void flyStepAction() {
@@ -100,6 +214,7 @@ public class World extends JPanel {
             bullets[i].step();
 
         }
+        System.out.println("子弹:"+bullets.length);
 //        airplane.step();
 //        bigAirplane.step();
 //        helicopter.step();
@@ -118,6 +233,25 @@ public class World extends JPanel {
         for (int i = 0; i < bullets.length; i++) {
             bullets[i].pointObject(graphics);
 
+        }
+        Font font = new Font("宋体",Font.TYPE1_FONT,18);
+        graphics.setFont(font);
+        //设置画笔颜色
+        graphics.setColor(Color.red);
+        //画字符串
+        graphics.drawString("生命值:"+hero.getLife(),10,20);
+        graphics.drawString("双倍子弹数量:"+hero.getFire(),10,40);
+        if(hero.getFire()>0){
+            graphics.drawString("状态:双倍火力",10,60);
+        }else {
+            graphics.drawString("状态:单倍火力",10,60);
+        }
+        graphics.drawString("得分:",10,80);
+        switch (state){
+            case START:graphics.drawImage(start,0,0,null);break;
+            case PAUSE:graphics.drawImage(pause,0,0,null);break;
+            case OVER:graphics.drawImage(over,0,0,null);break;
+            case VICTORY:graphics.drawImage(victory,0,0,null);break;
         }
 //        bullet.pointObject(graphics);
 //        airplane.pointObject(graphics);

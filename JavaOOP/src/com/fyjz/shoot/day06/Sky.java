@@ -42,4 +42,9 @@ public class Sky extends FlyingObject {
         graphics.drawImage(getImage(),this.x,this.y,null);
         graphics.drawImage(getImage(),this.x,this.y1,null);
     }
+
+    @Override
+    public boolean flyingObjectOut() {
+        return false;
+    }
 }
